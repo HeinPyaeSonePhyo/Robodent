@@ -21,13 +21,19 @@ A full-stack web application for running a dental clinic. Patients can browse se
 - **Treatment management** — add, edit and delete treatments and prices
 - **Patient management** — view, search, edit and delete patients
 - **Appointment management** — view, search and delete bookings
+### Appointment Booking Rules
 
-###  Smart booking rules
-- Appointments can only be booked on days/hours the dentist is on duty
-- No double-booking: the same dentist can't have two appointments at the same time
-- A **1-hour buffer** is enforced between a dentist's appointments
-- Past dates are rejected
-- Sign-up requires a valid date of birth (minimum age 3)
+- Appointments can only be booked when the selected dentist is scheduled
+  to work
+- The selected appointment time must fall within the dentist's working hours
+- The same dentist cannot have two appointments at exactly the same time
+- A **1-hour time conflict check** is applied between appointments for the
+  same dentist
+- Patients cannot book using an invalid/past schedule
+- Patient registration requires the date of birth to indicate an age of at
+  least 3 years
+- Appointment booking requires the patient to be logged in
+- Appointment booking currently accepts **Gmail addresses only**
 
 ---
 
@@ -38,8 +44,9 @@ A full-stack web application for running a dental clinic. Patients can browse se
 | Backend | PHP (procedural, `mysqli`) |
 | Database | MySQL / MariaDB |
 | Frontend | HTML5, CSS3, Bootstrap 5, JavaScript |
-| Libraries | jQuery, Owl Carousel, WOW.js, Animate.css, Tempus Dominus, TwentyTwenty, SweetAlert2, Font Awesome |
-| Local server | XAMPP / WAMP / MAMP |
+| UI / Libraries | jQuery, Owl Carousel, WOW.js, Animate.css, Tempus Dominus, TwentyTwenty, SweetAlert2, Font Awesome |
+| Server | Apache |
+| Development Environment | XAMPP / WAMP / MAMP |
 
 ---
 
@@ -48,41 +55,68 @@ A full-stack web application for running a dental clinic. Patients can browse se
 ```
 Robodent/
 ├── dental/
-│   ├── Admin/                 # Admin dashboard (staff side)
+│   ├── Admin/
 │   │   ├── adminlogin.php
 │   │   ├── dashboard.php
-│   │   ├── dentis.php                 # Dentist management
-│   │   ├── dentist_schedule.php       # Duty schedules
-│   │   ├── treatment.php              # Treatments & prices
-│   │   ├── patients.php               # Patient management
-│   │   ├── appointment.php            # Appointment management
-│   │   └── uploads/                   # Dentist photos
-│   └── Patients/              # Patient website (public side)
+│   │   ├── DB.php
+│   │   ├── dentis.php
+│   │   ├── dentist_schedule.php
+│   │   ├── display_image.php
+│   │   ├── leftnav.php
+│   │   ├── patients.php
+│   │   ├── treatment.php
+│   │   ├── treatment2.php
+│   │   ├── update_dentist.php
+│   │   ├── update_dentist_schedule.php
+│   │   ├── update_patient.php
+│   │   ├── update_treatments.php
+│   │   └── uploads/
+│   │
+│   └── Patients/
 │       ├── index.php
-│       ├── signup.php / Login.php / logout.php
-│       ├── forgot_password.php / reset_password.php
-│       ├── appointment.php / appointment_progress.php
-│       ├── process_appointment.php / check_schedule.php / cancel_appointment.php
+│       ├── about.php
+│       ├── appointment.php
+│       ├── appointment_progress.php
+│       ├── cancel_appointment.php
+│       ├── check_schedule.php
+│       ├── contact.php
+│       ├── DB.php
+│       ├── fetch_profile.php
+│       ├── footer.php
+│       ├── forgot_password.php
+│       ├── Login.php
+│       ├── logout.php
 │       ├── patient_profile.php
-│       ├── about.php / service.php / team.php / contact.php
-│       └── css/ js/ img/ lib/ scss/
-├── schema.sql                 # Database structure + sample data
+│       ├── process_appointment.php
+│       ├── reset_password.php
+│       ├── service.php
+│       ├── signup.php
+│       ├── team.php
+│       ├── topnav.php
+│       ├── css/
+│       ├── js/
+│       ├── img/
+│       ├── lib/
+│       └── scss/
+│
 └── README.md
-```
 
 ---
 
 ## Getting started
 
 ### Prerequisites
-- [XAMPP](https://www.apachefriends.org/) (or any Apache + PHP + MySQL stack)
+- XAMPP, WAMP, MAMP or another Apache + PHP + MySQL/MariaDB environment
 - PHP 7.4 or newer
+- MySQL / MariaDB
+- A modern web browser
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone (https://github.com/HeinPyaeSonePhyo/Robodent)
+   git clone (https://github.com/HeinPyaeSonePhyo/Robodent)\
+   cd Robodent
    ```
 
 2. **Copy the project into your web root**
@@ -90,9 +124,16 @@ Robodent/
    > Keep the folder name `dental` — the admin menu links to `/dental/Patients/`.
 
 3. **Create the database**
-   - Start **Apache** and **MySQL** in the XAMPP control panel.
-   - Open phpMyAdmin → **Import** → choose `schema.sql`.
-   - This creates the `robodent` database, all tables, and some sample data.
+   - Start **Apache** and **MySQL** in the XAMPP Control Panel.
+   - Open **phpMyAdmin** and create a new database named `robodent`.
+   - The application requires the following tables:
+     - `admin`
+     - `patients`
+     - `dentists`
+     - `treatments`
+     - `dentist_specialization`
+     - `dentist_schedule`
+     - `appointment`
 
 4. **Configure the database connection**
    Edit `dental/Admin/DB.php` and `dental/Patients/DB.php`:
@@ -110,9 +151,6 @@ Robodent/
    | Patient website | `http://localhost/dental/Patients/` |
    | Admin panel | `http://localhost/dental/Admin/adminlogin.php` |
 
-### Demo admin login
-The sample data in `schema.sql` creates a demo admin:
-
 | Email | Password |
 |-------|----------|
 | `admin@robodent.com` | `admin123` |
@@ -122,7 +160,6 @@ The sample data in `schema.sql` creates a demo admin:
 
 ##  Database
 
-`schema.sql` defines these tables:
 
 | Table | Purpose |
 |-------|---------|
@@ -140,16 +177,19 @@ The sample data in `schema.sql` creates a demo admin:
 
 This started as an academic project, so it is meant for learning and demos rather than production use. Planned improvements:
 
-- [ ] Hash passwords with `password_hash()` / `password_verify()`
-- [ ] Protect every admin page with a session check
-- [ ] Use prepared statements everywhere (search, delete and insert queries)
-- [ ] Move database credentials to a config / `.env` file
-- [ ] CSRF protection and stricter file-upload validation
-- [ ] Email confirmations and reminders for appointments
-- [ ] Support any email provider (currently `@gmail.com` only)
-- [ ] Appointment status (pending / confirmed / completed)
-
----
+- [ ] Hash patient passwords using `password_hash()` / `password_verify()`
+- [ ] Strengthen admin authentication and session protection
+- [ ] Use prepared statements consistently throughout the application
+- [ ] Move database credentials to a configuration file or environment
+      variables
+- [ ] Add CSRF protection
+- [ ] Improve file-upload validation and restrictions
+- [ ] Add email verification
+- [ ] Add appointment confirmation and reminder emails
+- [ ] Remove the Gmail-only appointment restriction
+- [ ] Add appointment status such as pending, confirmed and completed
+- [ ] Improve database installation by including a complete SQL schema
+- [ ] Improve validation and error handling
 
 ##  Credits
 
