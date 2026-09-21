@@ -82,7 +82,7 @@ Robodent/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/YOUR-USERNAME/Robodent.git
+   git clone (https://github.com/HeinPyaeSonePhyo/Robodent)
    ```
 
 2. **Copy the project into your web root**
